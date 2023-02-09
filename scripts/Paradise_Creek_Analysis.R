@@ -17,6 +17,12 @@ paradise_data <- read_csv("output/paradiseWT_full.csv") %>%
 
 paradise_data <- drop_na(paradise_data)
 
+#read in Raw PC WT data (degC)
+paradise_data_raw <- read_csv("output/paradiseWT_full_RAW.csv") %>% 
+  mutate(station = as_factor(station))
+
+paradise_data_raw <- drop_na(paradise_data_raw)
+
 # read in flow data
 paradise_flow <- read_csv('data/USGS_flow_Paradise_at_UofI.csv') %>% 
   select(1:3) %>%   
@@ -91,7 +97,40 @@ ggplot(data = paradise_data,aes(x = datetime, y = WT, group = station )) +
 #basic boxplot
 ggplot(data = paradise_data,aes(x = station, y = WT )) +
   geom_boxplot(aes(color = station))
- 
+
+
+
+# STATS ON # OF DATA POINTS-------------------------------------------------------------------
+
+raw_points <- as.data.frame(table(paradise_data_raw$station)) %>% 
+  rename('Station'= 1,'raw_count'= 2 )
+
+cleaned_points <- as.data.frame(table(paradise_data$station)) %>% 
+  rename('Station'= 1,'clean_count'= 2 )
+
+data_count <- left_join(raw_points, cleaned_points, by ="Station") %>% 
+  mutate(points_removed = raw_count - clean_count)
+
+# RAW DATA ANALYSIS --------------------------------------------------------------
+
+#Graph of solar input data that was removed
+solar_data_bigger <- paradise_data_raw %>%
+  filter(station == 'PC4.79') %>% 
+  filter(datetime >= as.Date('2022-07-4') & datetime <= as.Date('2022-08-16'))
+
+ggplot(data = solar_data_bigger,aes(x = datetime, y = WT, group = station )) +
+  geom_line(aes(color = station))
+
+# zoomed in on the same thing
+solar_data_zoom <- paradise_data_raw %>%
+  filter(station == 'PC4.79') %>% 
+  filter(datetime >= as.Date('2022-07-03') & datetime <= as.Date('2022-07-24'))
+
+ggplot(data = solar_data_zoom,aes(x = datetime, y = WT, group = station )) +
+  geom_line(aes(color = station))
+
+
+
 #------------------------------------------------------------------
 # 7-DADMax
 
